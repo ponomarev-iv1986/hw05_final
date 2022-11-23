@@ -1,8 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_cookie
 
 from .forms import CommentForm, PostForm
 from .models import Comment, Follow, Group, Post
@@ -14,8 +12,6 @@ User = get_user_model()
 POSTS_AMOUNT: int = 10
 
 
-@cache_page(20, key_prefix='index_page')
-@vary_on_cookie
 def index(request):
     """Главная страница."""
     template = 'posts/index.html'
@@ -187,13 +183,10 @@ def profile_follow(request, username):
     """Подписаться."""
     author = get_object_or_404(User, username=username)
     if author != request.user:
-        if not request.user.follower.filter(
+        Follow.objects.get_or_create(
+            user=request.user,
             author=author
-        ).exists():
-            Follow.objects.create(
-                user=request.user,
-                author=author
-            )
+        )
     return redirect('posts:profile', username)
 
 

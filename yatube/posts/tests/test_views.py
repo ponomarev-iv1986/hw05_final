@@ -249,9 +249,9 @@ class FollowsTest(TestCase):
         self.client_3 = Client()
         self.client_3.force_login(FollowsTest.user_3)
 
-    def test_follow_unfollow(self):
+    def test_follow(self):
         """
-        Проверяем подписку/отписку авторизованного пользователя.
+        Проверяем подписку авторизованного пользователя.
         """
         follows = Follow.objects.filter(
             user=FollowsTest.user_2
@@ -262,23 +262,53 @@ class FollowsTest(TestCase):
                 args=(FollowsTest.user.username,)
             )
         )
+        response = self.client_2.get(
+            reverse('posts:follow_index')
+        )
+        page_context = response.context.get('page_obj')
+        self.assertEqual(
+            len(page_context.object_list),
+            follows + FollowsTest.user.posts.count()
+        )
         self.assertEqual(
             Follow.objects.filter(
                 user=FollowsTest.user_2
             ).count(),
             follows + FollowsTest.user.posts.count()
         )
+
+    def test_unfollow_(self):
+        """
+        Проверяем отписку авторизованного пользователя.
+        """
+        self.client_2.get(
+            reverse(
+                'posts:profile_follow',
+                args=(FollowsTest.user.username,)
+            )
+        )
+        follows = Follow.objects.filter(
+            user=FollowsTest.user_2
+        ).count()
         self.client_2.get(
             reverse(
                 'posts:profile_unfollow',
                 args=(FollowsTest.user.username,)
             )
         )
+        response = self.client_2.get(
+            reverse('posts:follow_index')
+        )
+        page_context = response.context.get('page_obj')
+        self.assertEqual(
+            len(page_context.object_list),
+            follows - FollowsTest.user.posts.count()
+        )
         self.assertEqual(
             Follow.objects.filter(
                 user=FollowsTest.user_2
             ).count(),
-            follows
+            follows - FollowsTest.user.posts.count()
         )
 
     def test_new_post(self):
