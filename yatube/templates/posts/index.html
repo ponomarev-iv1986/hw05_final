@@ -6,7 +6,7 @@
 {% endblock %}
 {% block content %}
   {% include 'posts/includes/switcher.html' %}
-  {% cache 20 sidebar %}
+  {% cache 2 sidebar %}
     {% for post in page_obj %}
       <article>
         <ul>
